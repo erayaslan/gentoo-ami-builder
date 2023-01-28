@@ -133,6 +133,7 @@ eexec sed -i \
     -e '/CONFIG_NVME_CORE[ =]/c\CONFIG_NVME_CORE=y' \
     -e '/CONFIG_BLK_DEV_NVME[ =]/c\CONFIG_BLK_DEV_NVME=y' \
     -e '/CONFIG_IXGBEVF[ =]/c\CONFIG_IXGBEVF=y' \
+    -e '/CONFIG_DEBUG_INFO_BTF[ =]/c\CONFIG_DEBUG_INFO_BTF=n' \
     "$KERNEL_CONFIG.bootstrap"
 
 if eon "$GENTOO_SYSTEMD"; then
@@ -157,13 +158,13 @@ KERNEL_CONFIG="$KERNEL_CONFIG.bootstrap"
 
 einfo "Installing kernel sources..."
 
-# ena <= 2.6.1 is incompatible with fresh kernels, temporarily mask >=5.15 kernels
+# ena-2.8.0 seems to be incompatible with fresh kernels, temporarily mask >=6.1.0 kernels
 mkdir -p /etc/portage/package.mask
-echo "# masked due to ena <= 2.6.1 being incompatible with kernels >= 5.15" > /etc/portage/package.mask/kernel
-echo ">=sys-kernel/gentoo-sources-5.15.0" >> /etc/portage/package.mask/kernel
+echo "# masked due to ena-2.8.0 being incompatible with kernels >= 6.1.0" > /etc/portage/package.mask/kernel
+echo ">=sys-kernel/gentoo-sources-6.1.0" >> /etc/portage/package.mask/kernel
 
+echo "sys-kernel/gentoo-sources symlink" >> /etc/portage/package.use/kernel
 eexec emerge $EMERGE_OPTS "sys-kernel/gentoo-sources"
-eexec ln -sfnv "$(find /usr/src -maxdepth 1 -type d -iname 'linux-*' | head -n 1)" /usr/src/linux
 
 einfo "Installing genkernel..."
 
@@ -180,56 +181,14 @@ eexec genkernel all $GENKERNEL_OPTS --makeopts="$MAKE_OPTS" --kernel-config="$KE
 
 einfo "Installing ENA kernel module..."
 
-# NOTE: disabled usage of Gentoo package since it is not timely updated
-#       and contribution process is unfortunately unfriendly:
-#       https://github.com/gentoo/gentoo/pull/9658
+eexec mkdir -p "/etc/portage/package.accept_keywords"
 
-# eexec mkdir -p "/etc/portage/package.accept_keywords"
-
-# # full unmask with ** is used to workaround currently missing arm64 for KEYWORDS in ebuild
-# cat > "/etc/portage/package.accept_keywords/gentoo-ami-builder" << END
-# # added by gentoo-ami-builder
-# net-misc/ena-driver **
-# END
-
-# eexec emerge $EMERGE_OPTS "net-misc/ena-driver"
-
-eindent
-
-einfo "Installing local overlay..."
-
-eexec mkdir -p "/etc/portage/repos.conf"
-
-cat > "/etc/portage/repos.conf/local.conf" << END
-[local]
-location = /usr/local/portage
-masters = gentoo
-auto-sync = no
+cat > "/etc/portage/package.accept_keywords/gentoo-ami-builder" << END
+# added by gentoo-ami-builder
+net-misc/ena-driver ~$GENTOO_ARCH
 END
 
-eexec mkdir -p "/usr/local/portage/metadata"
-
-cat > "/usr/local/portage/metadata/layout.conf" << END
-repo-name = local
-masters = gentoo
-thin-manifests = true
-END
-
-eexec mkdir -p "/usr/local/portage/net-misc/ena"
-
-ENA_VERSION="2.6.1"
-
-eexec curl $CURL_OPTS \
-    -o "/usr/local/portage/net-misc/ena/ena-$ENA_VERSION.ebuild" \
-    "https://raw.githubusercontent.com/sormy/gentoo-overlay/master/net-misc/ena/ena-$ENA_VERSION.ebuild" \
-    -o "/usr/local/portage/net-misc/ena/Manifest" \
-    "https://raw.githubusercontent.com/sormy/gentoo-overlay/master/net-misc/ena/Manifest"
-
-eexec chown -R portage:portage "/usr/local/portage"
-
-einfo "Installing kernel module..."
-
-eexec emerge $EMERGE_OPTS "net-misc/ena"
+eexec emerge $EMERGE_OPTS "net-misc/ena-driver"
 
 if eoff "$GENTOO_SYSTEMD"; then
     cat >> /etc/conf.d/modules << END
@@ -265,8 +224,6 @@ fi
 cat >> /etc/default/grub << END
 
 # added by gentoo-ami-builder
-GRUB_DEFAULT=0
-GRUB_TIMEOUT=0
 GRUB_TERMINAL="console serial"
 GRUB_SERIAL_COMMAND="serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1"
 GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX console=tty0 console=ttyS0,115200n8"
