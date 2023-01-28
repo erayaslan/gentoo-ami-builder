@@ -6,6 +6,7 @@
 # global EC2_VOLUME_TYPE
 # global EC2_KEY_PAIR
 # global EC2_SECURITY_GROUP
+# global EC2_SUBNET_ID
 # global SKIP_PHASES
 # global AWS_REGION
 
@@ -111,7 +112,7 @@ wait_until_image_will_be_available() {
     while : ; do
         attempt=$(expr $attempt + 1)
 
-        einfo "Waiting until AMI image will be available ($attempt/$max_attempts)..."
+        einfo "Waiting until AMI image is available ($attempt/$max_attempts)..."
 
         [ "$(get_image_state $image_id)" = "available" ] && break || true
         [ $attempt = $max_attempts ] && return 1 || true
@@ -126,7 +127,7 @@ get_last_amzn2_image() {
     eexec -p aws ec2 describe-images \
         --region "$AWS_REGION" \
         --filters "Name=owner-alias,Values=amazon" \
-                  "Name=name,Values=amzn2-ami-hvm-2.0.*-$arch-gp2" \
+                  "Name=name,Values=amzn2-ami-kernel*-hvm-2.0.*-$arch-gp2" \
         --query "reverse(sort_by(Images, &CreationDate))[0].ImageId" \
         --output text
 }
@@ -207,12 +208,14 @@ run_instance() {
     # global EC2_VOLUME_TYPE
     # global EC2_KEY_PAIR
     # global EC2_SECURITY_GROUP
+    # global EC2_SUBNET_ID
 
     [ -z "$EC2_INSTANCE_TYPE" ] && edie "Unable to launch EC2 instance without provided Instance Type."
     [ -z "$EC2_VOLUME_SIZE" ] && edie "Unable to launch EC2 instance without provided Volume Size."
     [ -z "$EC2_VOLUME_TYPE" ] && edie "Unable to launch EC2 instance without provided Volume Type."
     [ -z "$EC2_KEY_PAIR" ] && edie "Unable to launch EC2 instance without provided Key Pair."
     [ -z "$EC2_SECURITY_GROUP" ] && edie "Unable to launch EC2 instance without provided Security Group."
+    [ -z "$EC2_SUBNET_ID" ] && edie "Unable to launch EC2 instance without subnet-id"
 
     local image_id="$1"
     local shapshot_id="$2"
@@ -249,10 +252,11 @@ END
 
     eexec -p aws ec2 run-instances \
         --region "$AWS_REGION" \
+	--subnet-id "$EC2_SUBNET_ID" \
         --image-id "$image_id" \
         --instance-type "$EC2_INSTANCE_TYPE" \
         --key-name "$EC2_KEY_PAIR" \
-        --security-groups "$EC2_SECURITY_GROUP" \
+        --security-group-ids "$EC2_SECURITY_GROUP" \
         --block-device-mappings "file://$device_mapping_file" \
         ${opt_args[*]} \
         --query 'Instances[0].InstanceId' \

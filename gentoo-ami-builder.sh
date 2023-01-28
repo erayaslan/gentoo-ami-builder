@@ -121,6 +121,9 @@ TERMINATE_ON_FAILURE="yes"
 # Keep disk2 volume after instance has been terminated (for debug purposes).
 KEEP_BOOTSTRAP_DISK="no"
 
+# Subnet-ID for the instance
+EC2_SUBNET_ID=""
+
 # Application phase script filenames.
 APP_PHASE1_X32_SCRIPT=""
 APP_PHASE2_SCRIPT=""
@@ -150,6 +153,7 @@ opt_config "
     --user-phase \
     --resume-instance-id \
     --skip-phases \
+    --subnet-id \
     --pause-before-reboot \
     --terminate-on-failure \
     --keep-bootstrap-disk \
@@ -187,6 +191,7 @@ OPT="$(opt_get --gentoo-image-name)";   [ -z "$OPT" ] || GENTOO_IMAGE_NAME_PREFI
 OPT="$(opt_get --user-phase)";          [ -z "$OPT" ] || USER_PHASE="$OPT"
 OPT="$(opt_get --resume-instance-id)";  [ -z "$OPT" ] || EC2_INSTANCE_ID="$OPT"
 OPT="$(opt_get --skip-phases)";         [ -z "$OPT" ] || SKIP_PHASES="$OPT"
+OPT="$(opt_get --subnet-id)";           [ -z "$OPT" ] || EC2_SUBNET_ID="$OPT"
 OPT="$(opt_get --pause-before-reboot)"; [ -z "$OPT" ] || PAUSE_BEFORE_REBOOT="$OPT"
 OPT="$(opt_get --terminate-on-failure)";[ -z "$OPT" ] || TERMINATE_ON_FAILURE="$OPT"
 OPT="$(opt_get --keep-bootstrap-disk)"; [ -z "$OPT" ] || KEEP_BOOTSTRAP_DISK="$OPT"
