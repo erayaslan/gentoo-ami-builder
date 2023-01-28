@@ -21,10 +21,10 @@ source "$SCRIPT_DIR/lib/distfiles.sh"
 
 APP_NAME="gentoo-ami-builder"
 APP_DESCRIPTION="Gentoo AMI Builder"
-APP_VERSION="1.1.6"
+APP_VERSION="1.2.0"
 
 # AWS region.
-AWS_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
+AWS_REGION="${AWS_DEFAULT_REGION:-eu-central-1}"
 
 # Security group with incoming connection available on SSH port (22).
 EC2_SECURITY_GROUP="default"
@@ -43,10 +43,10 @@ EC2_INSTANCE_TYPE_ARM64="a1.2xlarge"
 EC2_ARCH=""
 
 # Default volume size in GB.
-EC2_VOLUME_SIZE="20"
+EC2_VOLUME_SIZE="100"
 
 # Default volume type.
-EC2_VOLUME_TYPE="gp2"
+EC2_VOLUME_TYPE="gp3"
 
 # Set to the latest Amazon Linux AMI for selected architecture and region.
 EC2_AMAZON_IMAGE_ID=""
@@ -80,7 +80,7 @@ EMERGE_OPTS="--quiet"
 GENKERNEL_OPTS="--no-color"
 
 # Gentoo stage3.
-GENTOO_STAGE3="amd64-openrc"
+GENTOO_STAGE3="arm64-openrc"
 
 # Gentoo profile. Blank indicates that stage3 default profile should be used.
 GENTOO_PROFILE=""
