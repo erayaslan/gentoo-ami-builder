@@ -71,6 +71,7 @@ einfo "Installing portage repo..."
 eexec mkdir -p /etc/portage/repos.conf
 eexec cp -f /usr/share/portage/config/repos.conf /etc/portage/repos.conf/gentoo.conf
 eexec emerge-webrsync
+eexec emerge --sync
 
 ################################################################################
 
@@ -157,11 +158,6 @@ KERNEL_CONFIG="$KERNEL_CONFIG.bootstrap"
 ################################################################################
 
 einfo "Installing kernel sources..."
-
-# ena-2.8.0 seems to be incompatible with fresh kernels, temporarily mask >=6.1.0 kernels
-mkdir -p /etc/portage/package.mask
-echo "# masked due to ena-2.8.0 being incompatible with kernels >= 6.1.0" > /etc/portage/package.mask/kernel
-echo ">=sys-kernel/gentoo-sources-6.1.0" >> /etc/portage/package.mask/kernel
 
 echo "sys-kernel/gentoo-sources symlink" >> /etc/portage/package.use/kernel
 eexec emerge $EMERGE_OPTS "sys-kernel/gentoo-sources"

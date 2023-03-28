@@ -104,8 +104,8 @@ verify_image_state() {
 
 wait_until_image_will_be_available() {
     local image_id="$1"
-    local max_attempts="${2:-30}"
-    local interval="${3:-60}"
+    local max_attempts="${2:-40}"
+    local interval="${3:-120}"
 
     local attempt=0
 
